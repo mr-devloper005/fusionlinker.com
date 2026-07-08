@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Fragment } from 'react'
 import { ArrowUpRight, BriefcaseBusiness, ChevronDown, Download, FileText, Globe, MapPin, Phone, Search, Star, UserRound } from 'lucide-react'
 import { buildTaskMetadata } from '@/lib/seo'
 import { CATEGORY_OPTIONS, normalizeCategory } from '@/lib/categories'
@@ -9,6 +10,7 @@ import { taskPageMetadata } from '@/config/site.content'
 import { taskPageVoices } from '@/editable/content/task-pages.content'
 import { EditableSiteShell } from '@/editable/shell/EditableSiteShell'
 import { getTaskTheme, taskThemeStyle } from '@/editable/theme/task-themes'
+import { Ads } from '@/lib/ads'
 
 export const revalidate = 3
 
@@ -32,7 +34,7 @@ const getImages = (post: SitePost) => {
   return [...media, ...images, ...(isUrl(image) ? [image] : []), ...(isUrl(logo) ? [logo] : [])].filter(Boolean).slice(0, 8)
 }
 
-const placeholder = '/placeholder.svg?height=900&width=1200'
+const placeholder = '/favicon.png?v=20260413'
 const getImage = (post: SitePost) => getImages(post)[0] || placeholder
 const getCategory = (post: SitePost, fallback: string) => asText(getContent(post).category) || post.tags?.[0] || fallback
 const stripHtml = (value: string) => value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
@@ -56,13 +58,28 @@ function pageHref(basePath: string, category: string, page: number) {
 }
 
 const taskGrid: Record<TaskKey, string> = {
-  article: 'grid gap-7 md:grid-cols-2 xl:grid-cols-3',
+  article: 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
   listing: 'grid gap-5 xl:grid-cols-2',
   classified: 'grid gap-5 sm:grid-cols-2 xl:grid-cols-3',
   image: 'columns-1 gap-5 [column-fill:_balance] sm:columns-2 xl:columns-3',
   sbm: 'grid gap-5 md:grid-cols-2 xl:grid-cols-3',
   pdf: 'grid gap-5 md:grid-cols-2 xl:grid-cols-3',
   profile: 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+}
+
+const archiveAdSlots: Record<TaskKey, [string, string]> = {
+  article: ['header', 'in-feed'],
+  profile: ['sidebar', 'footer'],
+  listing: ['header', 'sidebar'],
+  classified: ['in-feed', 'article-bottom'],
+  image: ['header', 'footer'],
+  sbm: ['sidebar', 'article-bottom'],
+  pdf: ['header', 'article-bottom'],
+}
+
+const singleArchiveAdSlots: Partial<Record<TaskKey, string>> = {
+  article: 'header',
+  profile: 'sidebar',
 }
 
 // Shared premium surface: hairline border, soft radius, smooth lift on hover.
@@ -96,15 +113,17 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
   return (
     <EditableSiteShell>
       <main style={taskThemeStyle(task)} className="min-h-screen bg-[var(--tk-bg)] text-[var(--tk-text)]">
-        <header className="relative overflow-hidden border-b border-[var(--tk-line)]">
-          <div className="pointer-events-none absolute inset-x-0 -top-40 h-96 bg-[radial-gradient(60%_60%_at_50%_0%,var(--tk-glow),transparent_70%)]" />
-          <div className="relative mx-auto max-w-[var(--editable-container)] px-6 py-20 sm:py-28 lg:px-8">
-            <div className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.34em] text-[var(--tk-accent)]">
+        <header className="relative overflow-hidden border-b border-black">
+          <div className="relative mx-auto max-w-[var(--editable-container)] px-6 py-14 sm:py-20 lg:px-8">
+            <div className="fusion-section-rule">
+              <span className="fusion-section-label">{theme.kicker}</span>
+            </div>
+            <div className="mt-8 flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.24em] text-[var(--tk-accent)]">
               <span>{theme.kicker}</span>
               <span className="h-1 w-1 rounded-full bg-[var(--tk-accent)] opacity-50" />
               <span className="text-[var(--tk-muted)]">{label}</span>
             </div>
-            <h1 className="editable-display mt-6 max-w-3xl text-balance text-[2.5rem] font-semibold leading-[1.06] tracking-[-0.03em] sm:text-5xl lg:text-6xl">
+            <h1 className="editable-display mt-5 max-w-4xl text-balance text-[2.5rem] font-semibold leading-[1.02] sm:text-5xl lg:text-7xl">
               {voice?.headline || `Browse ${label}`}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--tk-muted)]">{voice?.description || theme.note}</p>
@@ -116,9 +135,9 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
               </div>
             ) : null}
 
-            <div className="mt-12 flex flex-col gap-4 border-t border-[var(--tk-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-10 flex flex-col gap-4 border-t-4 border-black pt-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-[var(--tk-muted)]">
-                <span className="font-semibold text-[var(--tk-text)]">{posts.length}</span> {posts.length === 1 ? 'post' : 'posts'} · {categoryLabel}
+                <span className="font-semibold text-[var(--tk-text)]">{posts.length}</span> {posts.length === 1 ? 'post' : 'posts'} - {categoryLabel}
               </p>
               <form action={basePath} className="flex items-center gap-2.5">
                 <div className="relative">
@@ -139,10 +158,25 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
           </div>
         </header>
 
+        <div className="mx-auto max-w-6xl px-4 py-6">
+          <Ads slot={singleArchiveAdSlots[task] || archiveAdSlots[task][0]} showLabel eager className="mx-auto w-full" />
+        </div>
+
         <section className="mx-auto max-w-[var(--editable-container)] px-6 py-16 sm:py-20 lg:px-8">
           {posts.length ? (
             <div className={taskGrid[task]}>
-              {posts.map((post, index) => <ArchivePostCard key={post.id || post.slug} post={post} task={task} basePath={basePath} index={index} />)}
+              {posts.map((post, index) => (
+                <Fragment key={`${post.id || post.slug || post.title}-${index}`}>
+                  {index === 6 && !singleArchiveAdSlots[task] ? (
+                    <div className={task === 'article' ? 'md:col-span-2 xl:col-span-3' : 'sm:col-span-2 lg:col-span-3 xl:col-span-4'}>
+                      <div className="mx-auto max-w-6xl px-0 py-4">
+                        <Ads slot={archiveAdSlots[task][1]} showLabel eager className="mx-auto w-full" />
+                      </div>
+                    </div>
+                  ) : null}
+                  <ArchivePostCard post={post} task={task} basePath={basePath} index={index} />
+                </Fragment>
+              ))}
             </div>
           ) : (
             <div className="mx-auto max-w-xl rounded-[var(--tk-radius)] border border-dashed border-[var(--tk-line)] bg-[var(--tk-surface)] px-8 py-16 text-center">
@@ -151,6 +185,17 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
               <p className="mt-2 text-sm leading-6 text-[var(--tk-muted)]">Try another category, or check back after new {label.toLowerCase()} are published.</p>
             </div>
           )}
+
+          {posts.length && posts.length <= 6 && !singleArchiveAdSlots[task] ? (
+            <div className="mx-auto mt-10 max-w-6xl px-0 py-4">
+              <Ads slot={archiveAdSlots[task][1]} showLabel eager className="mx-auto w-full" />
+            </div>
+          ) : null}
+          {!posts.length && !singleArchiveAdSlots[task] ? (
+            <div className="mx-auto mt-10 max-w-6xl px-0 py-4">
+              <Ads slot={archiveAdSlots[task][1]} showLabel eager className="mx-auto w-full" />
+            </div>
+          ) : null}
 
           {posts.length ? (
             <nav className="mt-16 flex items-center justify-center gap-3 text-sm">
