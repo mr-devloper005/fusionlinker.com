@@ -44,7 +44,7 @@ export const pagesContent = {
       title: 'Explore articles, visuals, and resources through one connected experience.',
       description: 'Move between articles, image-led posts, listings, and resources through one clearer and more connected visual system.',
       primaryCta: { label: 'Browse Articles', href: '/article' },
-      secondaryCta: { label: 'Contact Sales', href: '/contact' },
+      secondaryCta: { label: 'Contact Us', href: '/contact' },
     },
     taskSection: {
       heading: 'Latest {label}',
