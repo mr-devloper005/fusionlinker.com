@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
   is disabled for prefers-reduced-motion users.
 */
 export function EditableHeroCollage({ images }: { images: string[] }) {
-  const pool = images.length ? images : ['/placeholder.svg?height=900&width=1400']
+  const pool = images
   // Keep tiles big: at most a 2x2 collage so each image reads large in the hero.
   const cellCount = pool.length >= 4 ? 4 : pool.length >= 2 ? 2 : 1
   const [tick, setTick] = useState(0)
@@ -35,16 +35,20 @@ export function EditableHeroCollage({ images }: { images: string[] }) {
         const activeIndex = (cell + tick) % pool.length
         return (
           <div key={cell} className="relative overflow-hidden bg-[var(--slot4-media-bg)]">
-            {pool.map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt=""
-                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms] ease-in-out ${i === activeIndex ? 'opacity-100' : 'opacity-0'}`}
-                loading={cell === 0 && i === 0 ? 'eager' : 'lazy'}
-                {...(cell === 0 && i === 0 ? { fetchPriority: 'high' as const } : {})}
-              />
-            ))}
+            {pool.length ? (
+              pool.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt=""
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms] ease-in-out ${i === activeIndex ? 'opacity-100' : 'opacity-0'}`}
+                  loading={cell === 0 && i === 0 ? 'eager' : 'lazy'}
+                  {...(cell === 0 && i === 0 ? { fetchPriority: 'high' as const } : {})}
+                />
+              ))
+            ) : (
+              <div className="absolute inset-0 bg-[repeating-linear-gradient(135deg,rgba(0,0,0,0.16)_0_2px,transparent_2px_22px)]" />
+            )}
           </div>
         )
       })}
